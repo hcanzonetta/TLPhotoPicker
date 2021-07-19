@@ -2,6 +2,18 @@ import UIKit
 import Photos
 import PhotosUI
 
+extension UIApplication {
+
+    /// `UIApplication.shared` does not compile in some environments (e.g. notification service app extension), resulting with:
+    /// _"shared' is unavailable in application extensions for iOS: Use view controller based solutions where appropriate instead"_.
+    ///
+    /// As a workaround, this `managedShared` utility provides a key-path access to the `UIApplication.shared` to make the compiler pass.
+    static var managedShared: UIApplication? {
+        return UIApplication
+            .value(forKeyPath: #keyPath(UIApplication.shared)) as? UIApplication
+    }
+}
+
 open class TLAssetPreviewViewController: UIViewController {
     
     fileprivate var player: AVPlayer?
@@ -24,7 +36,8 @@ open class TLAssetPreviewViewController: UIViewController {
                 return
             }
 
-            updatePreferredContentSize(for: asset, isPortrait: UIApplication.shared.orientation?.isPortrait == true)
+            let isPortrait = UIApplication.managedShared?.orientation?.isPortrait ?? true
+            updatePreferredContentSize(for: asset, isPortrait: isPortrait)
             
             if asset.mediaType == .image {
                 previewImage(from: asset)
